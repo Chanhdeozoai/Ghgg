@@ -1,0 +1,458 @@
+--[[
+    Blox Fruits Auto Farm Script - Modified from provided link
+    Modified by: Gemini (Google AI) - Based on user request and original script
+    Last Updated: October 26, 2023 (Use current date)
+
+    Disclaimer: Use at your own risk. Scripting may violate Roblox's Terms of Service.
+]]
+_G.Farm = false
+_G.Melee = true -- Đánh bằng Melee
+_G.FarmRange = 15
+_G.FarmHeight = 10
+_G.TeleportToQuest = true
+_G.TeleportToMobs = true
+
+
+local plr = game.Players.LocalPlayer
+
+-- Island Data (FROM THE ORIGINAL SCRIPT - NEEDS VERIFICATION/UPDATING)
+local quests = {
+	["Beginner"] = {
+		["Milo"] = {
+			{"Bandit", "Bandit Leader"}
+		},
+	},
+    ["Jungle"] = {
+		["Silver Chest"] = {
+			{"Monkey", "Gorilla"}
+		},
+        ["Bartilo"] = {
+			{"Gorilla King"}
+		},
+	},
+	["Pirate Village"] = {
+		["Monkey King"] = {
+			{"Pirate", "Brute"}
+		},
+        ["Buggy the Clown"] = {
+			{"Buggy"}
+		},
+	},
+	["Desert"] = {
+		["Roblox Admin"] = {
+			{"Desert Bandit", "Desert Officer"}
+		},
+	},
+	["Frozen Village"] = {
+		["Yeti"] = {
+			{"Snow Bandit", "Snowman", "Yeti"}
+		},
+	},
+		["Marine Fortress"] = {
+		["Rich Man"] = {
+			{"Marine Lieutenant", "Marine Captain"}
+		},
+        ["Vice Admiral"] = {
+			{"Vice Admiral"}
+		},
+    },
+			["Prison"] = {
+		["Experienced Captain"] = {
+			{ "Prisoner", "Dangerous Prisoner","Chief Warden","Warden"}
+		},
+        ["Swan"] = {
+			{"Swan"}
+		},
+    },
+	["Magma Village"] = {
+	["Seti"] = {
+		{"Magma Ninja", "Lava Pirate"}
+		},
+	},
+    ["Colosseum"] = {
+	["Toga Warrior"] = {
+		{"Gladiator", "Toga Warrior"}
+		},
+	},
+    ["Skylands"] = {
+	["Master of Auras"] = {
+		{"Sky Bandit", "Dark Master"}
+		},
+        ["Usoap"] = {
+		{"God's Guard","Warrior of the Sky"}
+		},
+	},
+    ["Upper Skylands"] = {
+	["Thunder God"] = {
+		{"Royal Soldier", "Royal Squad","Thunder God"}
+		},
+	},
+    ["Fountain City"] = {
+	["Wyper"] = {
+		{"Fishman", "Fishman Warrior","Fishman Captain"}
+		},
+        ["Fishman Lord"] = {
+		{"Fishman Lord"}
+		},
+	},
+     ["Icy Island"] = {
+	["Ice Admiral"] = {
+		{"Snow Trooper", "Winter Warrior","Ice Admiral"}
+		},
+	},
+    ["Kingdom of Rose"] = {
+	["Swan"] = {
+		{"Factory Staff", "Cyborg","Robot Mega"}
+		},
+        ["Don Swan"] = {
+		{"Swan Pirate", "Beautiful Pirate"}
+		},
+	},
+    ["Green Zone"] = {
+	["Fajita"] = {
+		{"Military Soldier", "Military Commando"}
+		},
+	},
+      ["Graveyard"] = {
+	["Awakened Ice Admiral"] = {
+		{"Zombie", "Vampire"}
+		},
+        ["GraveStone"] = {
+          {"Living Zombie"}
+        },
+	},
+        ["Volcano"] = {
+	["Smoke Admiral"] = {
+		{"Galley Pirate", "Galley Captain","Smoke Admiral"}
+		},
+	},
+        ["Ship Wrecks"] = {
+	["Cursed Captain"] = {
+		{"Cursed Crewmate", "Cursed Captain"}
+		},
+        ["Gun Dealer"] = {
+          {"Cursed Ship"}
+        },
+	},
+    ["Underwater City"] = {
+	["Tide Keeper"] = {
+		{"Sea Soldier", "Water Fighter","Tide Keeper"}
+		},
+	},
+    	["Hot and Cold"] = {
+	["Poneglyph Researcher"] = {
+		{"Lava Pirate", "Snow Bandit","Magma Ninja"}
+		},
+        ["Phoenix Warlord"] = {
+          {"Phoenix Warlord"}
+        },
+	},
+     ["Haunted Castle"] = {
+	["Ghost Buster"] = {
+		{"Ghost", "Ectoplasm"}
+		},
+        ["Big News"] = {
+          {"Ghostly Guard","Ghostly Knight","Ghostly King"}
+        },
+	},
+    ["Floating Turtle"] = {
+	["Carrot"] = {
+		{"Carrot","Horned Warrior","Longma"}
+		},
+       ["Warrior"] = {
+		{"Kou Warrior","Kou Samurai"}
+		},
+       ["Admiral"] = {
+		{"Kou Warrior","Kou Samurai"}
+		},
+	},
+     ["Kitsune Island"] = {
+	["Kitsune Shrine"] = {
+		{"Kitsune Priestess","Kitsune Guardian"}
+		},
+       ["Sea King"] = {
+		{"Sea Beast", "Shark"}
+		},
+	},
+    ["Tiki Outpost"] = {
+	["Mysterious Scientist"] = {
+		{"Cursed Scientist","Lab Subject"}
+		},
+       ["High Commander"] = {
+		{"Pirate Billionaire","Pirate Millionaire"}
+		},
+	},
+      ["Hydra Island"] = {
+	["Jeremy"] = {
+		{"Dragon Crew Warrior", "Dragon Crew Brawler","Jeremy"}
+		},
+       ["Island Empress"] = {
+		{"Gladiator", "Giant","Island Empress"}
+		},
+	},
+}
+
+local function GetPlayerInfo()
+  local level = plr.leaderstats.Level.Value
+  local beli = plr.leaderstats.Beli.Value -- Or Money
+  local meleeStyle = "Combat" -- Default
+  if plr.Character and plr.Character:FindFirstChild("Combat Style") then
+      meleeStyle = plr.Character["Combat Style"].Name
+  end
+  return level, beli, meleeStyle
+end
+local function GetBestIsland(level) -- chọn đảo
+	local bestIsland = "Beginner" -- Default
+  local highestMinLevel = -1
+
+	for islandName, islandData in pairs(quests) do
+		for npcName, npcData in pairs(islandData) do
+      local minLevel = math.huge
+			for _, mobList in pairs(npcData) do
+				for _, mobName in ipairs(mobList) do
+          -- Attempt to find a mob with this name and get its level (VERY HACKY)
+          for _, obj in pairs(workspace:GetChildren()) do
+            if obj.Name == mobName and obj:FindFirstChild("Humanoid") then
+               if obj:FindFirstChild("Level") then
+                    local mobLevel = obj.Level.Value
+                   if mobLevel < minLevel then
+                      minLevel = mobLevel
+                    end
+                   break -- Found a mob, move to the next
+                end
+            end
+           end
+         end
+			end
+       if minLevel <= level and minLevel > highestMinLevel then
+        highestMinLevel = minLevel
+        bestIsland = islandName
+      end
+    end
+	end
+	return bestIsland
+end
+local function HasQuest() -- check nhiệm vụ
+  for _, guiObject in pairs(plr.PlayerGui:GetChildren()) do
+      if guiObject:IsA("ScreenGui") and guiObject.Enabled then
+          return true -- Assume any active ScreenGui means a quest is active
+      end
+  end
+  return false
+end
+local function FindNPC(npcName, islandName) -- tìm npc
+  local npc = nil
+  for i,v in pairs(workspace:GetChildren()) do
+    if v.Name == npcName then
+        npc = v
+      break
+    end
+  end
+  return npc
+end
+local function FindTargets(mobNames, gatherRange) -- tìm quái
+ local targets = {}
+    for _, mobName in ipairs(mobNames) do
+        for _, mob in pairs(workspace:GetChildren()) do
+            if mob.Name == mobName and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                local distance = (plr.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
+                if distance <= gatherRange then
+                    table.insert(targets, mob)
+                end
+            end
+        end
+    end
+    return targets
+end
+
+local function AttackFromAbove(targets, heightOffset) -- Tấn công
+  if #targets == 0 then return end
+
+    -- Calculate center position of targets
+  local sumX, sumY, sumZ = 0, 0, 0
+  for _, target in ipairs(targets) do
+      if target and target:FindFirstChild("HumanoidRootPart") then
+          sumX = sumX + target.HumanoidRootPart.Position.X
+          sumY = sumY + target.HumanoidRootPart.Position.Y
+          sumZ = sumZ + target.HumanoidRootPart.Position.Z
+      end
+  end
+  local avgX = sumX / #targets
+  local avgY = sumY / #targets
+  local avgZ = sumZ / #targets
+  local centerPosition = Vector3.new(avgX, avgY, avgZ)
+
+   -- Move above the center position
+  if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+    plr.Character.HumanoidRootPart.CFrame = CFrame.new(centerPosition.X, centerPosition.Y + heightOffset, centerPosition.Z)
+  else
+      print("ERROR:  Character or RootPart missing in AttackFromAbove")
+      return
+  end
+   wait(0.5)
+
+   -- Attack loop (Melee - Combat)
+  local attackKey = "1"
+  local vInput = game:GetService("VirtualInputManager")
+   local attackCooldown = 0.3
+  local lastAttackTime = 0
+
+  while #targets > 0 do
+      local closestTarget = nil
+      local closestDistance = math.huge
+
+      for i = #targets, 1, -1 do
+          local target = targets[i]
+          if not target or not target.Parent or not target:FindFirstChild("Humanoid") or target.Humanoid.Health <= 0 then
+             table.remove(targets, i)  -- Remove dead targets
+          else
+              local distance = (plr.Character.HumanoidRootPart.Position - target.HumanoidRootPart.Position).Magnitude
+              if distance < closestDistance then
+                  closestDistance = distance
+                  closestTarget = target
+              end
+          end
+      end
+
+       if closestTarget then
+         local currentTime = tick()
+         if currentTime - lastAttackTime >= attackCooldown then
+              vInput:SendKeyEvent(true, attackKey, false, game)
+            wait(0.1)
+              vInput:SendKeyEvent(false, attackKey, false, game)
+              lastAttackTime = currentTime
+         end
+          -- Maintain position above (less strict)
+         if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local distFromCenter = (plr.Character.HumanoidRootPart.Position - Vector3.new(centerPosition.X, centerPosition.Y + heightOffset, centerPosition.Z)).Magnitude
+             if distFromCenter > 5 then
+                  plr.Character.HumanoidRootPart.CFrame = CFrame.new(centerPosition.X, centerPosition.Y + heightOffset, centerPosition.Z)
+             end
+         else
+             print("ERROR:  Character/RootPart missing during attack")
+              return
+         end
+        else
+          break -- No more valid targets
+       end
+       wait(0.1)
+  end
+end
+local function GetMobNamesForQuest(island, npc) -- lấy tên quái
+	local mobNames = {}
+	if quests[island] and quests[island][npc] then
+		for _, mobList in pairs(quests[island][npc]) do
+			for _, mobName in ipairs(mobList) do
+				table.insert(mobNames, mobName)
+			end
+		end
+	end
+	return mobNames
+end
+local function AutoFarmLoop() -- vòng lặp farm
+	while _G.Farm do
+		pcall(function() -- pcall để tránh dừng đột ngột
+			if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
+				print("Waiting for character...")
+				plr.CharacterAdded:Wait()
+				return
+			end
+      local level = plr.leaderstats.Level.Value
+      local bestIsland = GetBestIsland(level)
+      local npcToUse = nil
+      local mobsToFarm = {}
+
+       -- Find an NPC on the best island
+      for npcName, _ in pairs(quests[bestIsland] or {}) do
+        npcToUse = npcName
+        mobsToFarm = GetMobNamesForQuest(bestIsland, npcToUse)
+        break -- Just use the first NPC found
+      end
+			if not npcToUse then
+				print("No NPC found for island:", bestIsland)
+				_G.Farm = false
+				return
+			end
+
+			if not HasQuest() then -- nhận nhiệm vụ
+				local npc = FindNPC(npcToUse, bestIsland)
+				if npc then
+          if _G.TeleportToQuest then
+              if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                plr.Character.HumanoidRootPart.CFrame = npc.CFrame * CFrame.new(0,2,5)
+                wait(0.5)
+              else
+                  print("ERROR: Character/Rootpart missing - quest")
+                  return
+              end
+          end
+          local vInput = game:GetService("VirtualInputManager")
+          local interactKey = "E"
+            local attempts = 3
+          for i = 1, attempts do
+             vInput:SendKeyEvent(true, interactKey, false, game)
+            wait(0.1)
+              vInput:SendKeyEvent(false, interactKey, false, game)
+               wait(1)
+            if HasQuest() then
+              print("Quest accepted (hopefully)!")
+              break
+            end
+          end
+				else
+					print("NPC not found:", npcToUse)
+					_G.Farm = false
+					return
+				end
+      end
+
+        -- Farm the mobs (using the gathered mob names)
+      local targets = FindTargets(mobsToFarm, _G.FarmRange)
+       if #targets > 0 then
+          AttackFromAbove(targets, _G.FarmHeight)
+      else
+           print("No targets found.")
+      end
+		end)
+		wait(1)
+	end
+end
+
+-- GUI (Basic Toggle Button)
+local FarmGui = Instance.new("ScreenGui")
+FarmGui.Name = "AutoFarmGui"
+FarmGui.Parent = plr.PlayerGui
+FarmGui.ResetOnSpawn = false
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = FarmGui
+ToggleButton.Size = UDim2.new(0, 100, 0, 50)
+ToggleButton.Position = UDim2.new(0.5, -50, 0.9, -25)
+ToggleButton.Text = "Start Farm"
+ToggleButton.BackgroundColor3 = Color3.new(0, 1, 0)
+ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextSize = 18
+
+local function ToggleFarm()
+    _G.Farm = not _G.Farm
+    if _G.Farm then
+        ToggleButton.Text = "Stop Farm"
+        ToggleButton.BackgroundColor3 = Color3.new(1, 0, 0)
+        AutoFarmLoop()  -- Start farming
+    else
+        ToggleButton.Text = "Start Farm"
+        ToggleButton.BackgroundColor3 = Color3.new(0, 1, 0)
+
+        -- Stop character movement:
+        if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+            plr.Character.Humanoid.WalkToPoint = plr.Character.HumanoidRootPart.Position
+            plr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Running, false)
+            plr.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping, false)
+        end
+        print("Farming stopped.")
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(ToggleFarm)
